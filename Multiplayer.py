@@ -3,12 +3,12 @@ import socket
 import threading
 c = socket.socket()
 c.connect(('localhost',9999))
-def disable(x):
+def disable(x,y="#7ec7e6"):
     z = list(x)[-1]
     for i in lbutt:
         if "button"+z in i:
-            exec(i+"[\"bg\"] = \'#e6b3ff'")
-            exec(i+"[\"activebackground\"] = \'#e6b3ff'")
+            exec(i+f"[\"bg\"] = \'{y}\'")
+            exec(i+f"[\"activebackground\"] = \'{y}\'")
         if "button"+ z in i and i not in disabled:
             exec(i+"[\"state\"] = ACTIVE")
         
@@ -62,7 +62,7 @@ disabled = []
 def change(x):
     global last_move
     c.send(bytes(x,"utf-8"))
-    disable(x) 
+    disable(x,"#e6b3ff") 
     if last_move == "O":
         exec(x+"[\"text\"] = \"X\"")
         exec(x+"[\"state\"] = DISABLED")
