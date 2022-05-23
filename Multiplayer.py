@@ -42,7 +42,7 @@ def listen():
             last_move = "O"
         elif "button" in msg:
             disable(msg)
-            enableall(msg[-2])
+            enableall(msg[-1])
             checkifdisabled(msg[-1])
             if last_move == "O":
                 exec(msg + "[\"text\"] = \"X\"")
