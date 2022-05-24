@@ -31,6 +31,30 @@ def checkifdisabled(p):
                 exec(j + "[\"activebackground\"] = \"#7ec7e6\"")
     except:
         pass
+def local_win(x,y):
+    for i in range(1,8,3):
+        winrow = True
+        for j in range(i,i+3):
+            if dic["button"+x+str(j)] != y:
+                winrow = False
+                break
+    for i in range(1,4):
+        wincol = True
+        for j in range(i,i+7,3):
+            if dic["button"+x+str(j)] != y:
+                wincol = False
+                break
+    windiag1 = True
+    for i in range(1,10,4):
+        if dic["button"+x+str(i)] != y:
+            windiag1 = False
+            break
+    windiag2 = True
+    for i in range(3,8,2):
+        if dic["button"+x+str(i)] != y:
+            windiag2 = False
+            break
+    return winrow or wincol or windiag1 or windiag2
 def listen():
     global last_move
     while True:
@@ -54,6 +78,14 @@ def listen():
                 exec(msg + "[\"state\"] = DISABLED")
                 disabled.append(msg)
                 dic[msg] = "O"
+            if local_win(msg[-2],moves[moves.index(last_move)-1]):
+                for i in lbutt:
+                    if "button"+msg[-2] in i:
+                        exec(i + "[\"bg\"] = \"#eb6e8b\"")
+                        exec(i + "[\"activebackground\"] = \"#eb6e8b\"")
+                        exec(i+"[\'state\'] =  DISABLED")
+                        if i not in disabled:
+                            disabled.append(i)
 
 
 def disableall():
@@ -64,12 +96,12 @@ def disableall():
 def enableall(x):
     for i in lbutt:
         if i not in disabled and "button"+x in i:
-            exec(f"{i}[\"state\"] = ACTIVE")
+            exec(i+"[\"state\"] = ACTIVE")
 
 
 t = threading.Thread(target=listen)
 t.start()
-last_move = "X"
+last_move = "O"
 root = Tk()
 root.configure(bg="black")
 
@@ -85,7 +117,7 @@ def make_grid(r, c):
 dic = dict(map(lambda e: (e, " "), lbutt))
 disabled = []
 
-
+moves = ["X","O"]
 def change(x):
     global last_move
     c.send(bytes(x, "utf-8"))
@@ -105,6 +137,14 @@ def change(x):
         last_move = "O"
         c.send(bytes("O", "utf-8"))
     disableall()
+    if local_win(x[-2],last_move):
+        for i in lbutt:
+            if "button"+x[-2] in i:
+                exec(i + "[\"bg\"] = \"#6bff81\"")
+                exec(i + "[\"activebackground\"] = \"#6bff81\"")
+                exec(i+"[\'state\'] =  DISABLED")
+                if i not in disabled:
+                    disabled.append(i)
 
 
 
