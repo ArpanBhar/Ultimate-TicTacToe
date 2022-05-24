@@ -1,4 +1,3 @@
-from telnetlib import WONT
 from tkinter import *
 import socket
 import threading
