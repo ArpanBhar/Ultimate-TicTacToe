@@ -1,3 +1,4 @@
+from telnetlib import WONT
 from tkinter import *
 import socket
 import threading
@@ -38,12 +39,17 @@ def local_win(x,y):
             if dic["button"+x+str(j)] != y:
                 winrow = False
                 break
+        if winrow:
+            break
+
     for i in range(1,4):
         wincol = True
         for j in range(i,i+7,3):
             if dic["button"+x+str(j)] != y:
                 wincol = False
                 break
+        if wincol:
+            break
     windiag1 = True
     for i in range(1,10,4):
         if dic["button"+x+str(i)] != y:
@@ -55,6 +61,14 @@ def local_win(x,y):
             windiag2 = False
             break
     return winrow or wincol or windiag1 or windiag2
+
+
+
+def global_win(x):
+    pass
+
+
+
 def listen():
     global last_move
     while True:
@@ -66,7 +80,6 @@ def listen():
             last_move = "O"
         elif "button" in msg:
             disable(msg)
-            enableall(msg[-1])
             checkifdisabled(msg[-1])
             if last_move == "O":
                 exec(msg + "[\"text\"] = \"X\"")
@@ -91,12 +104,6 @@ def listen():
 def disableall():
     for i in lbutt:
         exec(f"{i}[\"state\"] = DISABLED")
-
-
-def enableall(x):
-    for i in lbutt:
-        if i not in disabled and "button"+x in i:
-            exec(i+"[\"state\"] = ACTIVE")
 
 
 t = threading.Thread(target=listen)
