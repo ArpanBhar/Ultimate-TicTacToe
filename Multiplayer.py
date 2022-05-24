@@ -1,3 +1,4 @@
+from telnetlib import WONT
 from tkinter import *
 import socket
 import threading
@@ -39,7 +40,7 @@ def local_win(x,y):
                 winrow = False
                 break
         if winrow:
-            break
+            return winrow
 
     for i in range(1,4):
         wincol = True
@@ -48,7 +49,7 @@ def local_win(x,y):
                 wincol = False
                 break
         if wincol:
-            break
+            return wincol
     windiag1 = True
     for i in range(1,10,4):
         if dic["button"+x+str(i)] != y:
@@ -59,7 +60,7 @@ def local_win(x,y):
         if dic["button"+x+str(i)] != y:
             windiag2 = False
             break
-    return winrow or wincol or windiag1 or windiag2
+    return windiag1 or windiag2
 
 
 
