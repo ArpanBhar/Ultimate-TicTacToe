@@ -1,6 +1,7 @@
 from tkinter import *
 import socket
 import threading
+from tkinter import  messagebox
 lbutt = ",".join([",".join([f"button{x}{y}" for y in range(1, 10)]) for x in range(1, 10)]).split(",")
 
 c = socket.socket()
@@ -61,14 +62,31 @@ def local_win(x,y):
             break
     return windiag1 or windiag2
 
+def global_win():
 
-
-def global_win(x):
-    pass
-
-
+    print(l_wins)
+    winrow = False
+    wincol = False
+    windiag1 = False
+    windiag2 = False
+    for i in range(1,10,3):
+        if l_wins[i] == l_wins[i+1] == l_wins[i+2] != "":
+            winrow = True
+            break
+    for i in range(1,4):
+        if l_wins[i] == l_wins[i+3] == l_wins[i+6] != "":
+            wincol = True
+            break
+    if l_wins[1] == l_wins[5] == l_wins[9] != "":
+        windiag1 = True
+    if l_wins[3] == l_wins[5] == l_wins[7] != "":
+        windiag2 = True
+    if winrow or wincol or windiag1 or windiag2 is True:
+        c.send(bytes('lost', "utf-8"))
+    return winrow or wincol or windiag1 or windiag2
 
 def listen():
+
     global last_move
     while True:
         msg = c.recv(2048).decode()
@@ -79,7 +97,6 @@ def listen():
             last_move = "O"
         elif "button" in msg:
             disable(msg)
-            checkifdisabled(msg[-1])
             if last_move == "O":
                 exec(msg + "[\"text\"] = \"X\"")
                 exec(msg + "[\"state\"] = DISABLED")
@@ -98,7 +115,10 @@ def listen():
                         exec(i+"[\'state\'] =  DISABLED")
                         if i not in disabled:
                             disabled.append(i)
-
+            checkifdisabled(msg[-1])
+        elif "lost" in msg:
+            disableall()
+            messagebox.info("GAME OVER","YOU LOST!!!")
 
 def disableall():
     for i in lbutt:
@@ -122,8 +142,9 @@ def make_grid(r, c):
 
 dic = dict(map(lambda e: (e, " "), lbutt))
 disabled = []
-
+l_wins={1:'',2:'',3:'',4:'',5:'',6:'',7:'',8:'',9:''}
 moves = ["X","O"]
+
 def change(x):
     global last_move
     c.send(bytes(x, "utf-8"))
@@ -151,13 +172,16 @@ def change(x):
                 exec(i+"[\'state\'] =  DISABLED")
                 if i not in disabled:
                     disabled.append(i)
+        l_wins[int(x[-2])] = last_move
+        if global_win():
+            disableall()
+            messagebox.showinfo("GAME OVER","YOU WON")
 
 
 
 for i in range(1, 10):
     for j in range(1, 10):
-        exec(
-            f"button{i}{j} = Button(root,text=\" \",font=\"Helvatica 15 bold\",padx=18,pady=8,width = 1,bg=\"#ffe6ff\",bd=0,command=lambda :change(\"button{i}{j}\"),state = NORMAL)")
+        exec(f"button{i}{j} = Button(root,text=\" \",font=\"Helvatica 15 bold\",padx=18,pady=8,width = 1,bg=\"#ffe6ff\",bd=0,command=lambda :change(\"button{i}{j}\"),state = NORMAL)")
 count = 0
 for i in range(0, 10, 4):
     for j in range(0, 10, 4):
