@@ -10,16 +10,17 @@ c.connect(('localhost', 9999))
 def disable(x, y="#7ec7e6"):
     z = list(x)[-1]
     for i in lbutt:
-        if "button" + z in i:
-            exec(i + f"[\"bg\"] = \'{y}\'")
-            exec(i + f"[\"activebackground\"] = \'{y}\'")
-        if "button" + z in i and i not in disabled:
-            exec(i + "[\"state\"] = ACTIVE")
+        if i[-2] not in [str(x) for x in l_wins.keys() if l_wins[x] != ""]:
+            if "button" + z in i:
+                exec(i + f"[\"bg\"] = \'{y}\'")
+                exec(i + f"[\"activebackground\"] = \'{y}\'")
+            if "button" + z in i and i not in disabled:
+                exec(i + "[\"state\"] = ACTIVE")
 
-        elif "button" + z not in i:
-            exec(i + "[\"state\"] = DISABLED")
-            exec(i + "[\"bg\"] = \"#ffe6ff\"")
-            exec(i + "[\"activebackground\"] = \"#ffe6ff\"")
+            elif "button" + z not in i:
+                exec(i + "[\"state\"] = DISABLED")
+                exec(i + "[\"bg\"] = \"#ffe6ff\"")
+                exec(i + "[\"activebackground\"] = \"#ffe6ff\"")
 
 def checkifdisabled(p):
     try:
@@ -28,8 +29,9 @@ def checkifdisabled(p):
                 if i not in disabled:
                     exec(f"{i}[\"state\"] = ACTIVE")
             for j in lbutt:
-                exec(j + "[\"bg\"] = \"#7ec7e6\"")
-                exec(j + "[\"activebackground\"] = \"#7ec7e6\"")
+                if j[-2] not in [str(x) for x in l_wins.keys() if l_wins[x] != ""]:
+                    exec(j + "[\"bg\"] = \"#7ec7e6\"")
+                    exec(j + "[\"activebackground\"] = \"#7ec7e6\"")
     except:
         pass
 def local_win(x,y):
@@ -115,6 +117,7 @@ def listen():
                         exec(i+"[\'state\'] =  DISABLED")
                         if i not in disabled:
                             disabled.append(i)
+                l_wins[int(msg[-2])] = last_move
             checkifdisabled(msg[-1])
         elif "lost" in msg:
             disableall()
