@@ -2,6 +2,9 @@ from tkinter import *
 import socket
 import threading
 from tkinter import messagebox
+root = Tk()
+root.configure(bg="black")
+root.title("Ultimate TicTacToe")
 lbutt = ",".join([",".join([f"button{x}{y}" for y in range(1, 10)]) for x in range(1, 10)]).split(",")
 # link = input("Enter the join link: ")
 # port = int(input("Enter the port number: "))
@@ -23,18 +26,19 @@ def disable(x, y="#7ec7e6"):
                 exec(i + "[\"bg\"] = \"#ffe6ff\"")
                 exec(i + "[\"activebackground\"] = \"#ffe6ff\"")
 
-def checkifdisabled(p):
+def checkifdisabled(p,r,q = "#7ec7e6"):
     try:
         if len(disabled) == 81:
             messagebox.info("It's a draw!!")
         elif all(elem in disabled for elem in [f"button{p}{q}" for q in range(1,10)]):
-            for i in lbutt:
-                if i not in disabled:
-                    exec(f"{i}[\"state\"] = ACTIVE")
+            if r:
+                for i in lbutt:
+                    if i not in disabled:
+                        exec(f"{i}[\"state\"] = ACTIVE")
             for j in lbutt:
                 if j[-2] not in [str(x) for x in l_wins.keys() if l_wins[x] != ""]:
-                    exec(j + "[\"bg\"] = \"#7ec7e6\"")
-                    exec(j + "[\"activebackground\"] = \"#7ec7e6\"")
+                    exec(j + f"[\"bg\"] = \"{q}\"")
+                    exec(j + f"[\"activebackground\"] = \"{q}\"")
     except:
         pass
 def local_win(x,y):
@@ -121,7 +125,7 @@ def listen():
                         if i not in disabled:
                             disabled.append(i)
                 l_wins[int(msg[-2])] = moves[moves.index(last_move)-1]
-            checkifdisabled(msg[-1])
+            checkifdisabled(msg[-1],True)
         elif "lost" in msg:
             disableall()
             messagebox.showinfo("GAME OVER","YOU LOST!!!")
@@ -135,8 +139,6 @@ def disableall():
 t = threading.Thread(target=listen)
 t.start()
 last_move = "O"
-root = Tk()
-root.configure(bg="black")
 
 
 def make_grid(r, c):
@@ -156,6 +158,7 @@ def change(x):
     global last_move
     c.send(bytes(x, "utf-8"))
     disable(x, "#e6b3ff")
+    checkifdisabled(x[-1],False,"#e6b3ff")
     if last_move == "O":
         exec(x + "[\"text\"] = \"X\"")
         exec(x + "[\"state\"] = DISABLED")
