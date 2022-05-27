@@ -1,11 +1,12 @@
 from tkinter import *
 import socket
 import threading
-from tkinter import  messagebox
+from tkinter import messagebox
 lbutt = ",".join([",".join([f"button{x}{y}" for y in range(1, 10)]) for x in range(1, 10)]).split(",")
-
+# link = input("Enter the join link: ")
+# port = int(input("Enter the port number: "))
 c = socket.socket()
-c.connect(('localhost', 9999))
+c.connect(("localhost", 9999))
 
 def disable(x, y="#7ec7e6"):
     z = list(x)[-1]
@@ -24,7 +25,9 @@ def disable(x, y="#7ec7e6"):
 
 def checkifdisabled(p):
     try:
-        if all(elem in disabled for elem in [f"button{p}{q}" for q in range(1,10)]):
+        if len(disabled) == 81:
+            messagebox.info("It's a draw!!")
+        elif all(elem in disabled for elem in [f"button{p}{q}" for q in range(1,10)]):
             for i in lbutt:
                 if i not in disabled:
                     exec(f"{i}[\"state\"] = ACTIVE")
@@ -83,7 +86,7 @@ def global_win():
         windiag1 = True
     if l_wins[3] == l_wins[5] == l_wins[7] != "":
         windiag2 = True
-    if winrow or wincol or windiag1 or windiag2 is True:
+    if winrow or wincol or windiag1 or windiag2:
         c.send(bytes('lost', "utf-8"))
     return winrow or wincol or windiag1 or windiag2
 
@@ -117,11 +120,12 @@ def listen():
                         exec(i+"[\'state\'] =  DISABLED")
                         if i not in disabled:
                             disabled.append(i)
-                l_wins[int(msg[-2])] = last_move
+                l_wins[int(msg[-2])] = moves[moves.index(last_move)-1]
             checkifdisabled(msg[-1])
         elif "lost" in msg:
             disableall()
-            messagebox.info("GAME OVER","YOU LOST!!!")
+            messagebox.showinfo("GAME OVER","YOU LOST!!!")
+            root.destroy()
 
 def disableall():
     for i in lbutt:
@@ -179,6 +183,7 @@ def change(x):
         if global_win():
             disableall()
             messagebox.showinfo("GAME OVER","YOU WON")
+            root.destroy()
 
 
 
@@ -197,3 +202,5 @@ for i in [(0, 3), (3, 0), (0, 7), (7, 0)]:
 # canvas1.grid(row=0,column=4,columnspan=11)
 root.mainloop()
 print(dic)
+print(l_wins)
+print(disabled)
