@@ -76,7 +76,7 @@ entry_box.place(x=25,y=5)
 def send(x,y):
     if x and y != "":
         entry_box.delete(1.0,"end-1c")
-        c.send(bytes("<p>"+y+"<p>",'utf-8'))
+        c.send(bytes("'\0'<p>"+y+"<p>'\0'",'utf-8'))
         frame = CTkFrame(canvas_frame,corner_radius=10)
         frame.pack(side=TOP,anchor="e",padx=20,pady=3)
         CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=RIGHT,pady=5)
