@@ -2,14 +2,26 @@ from tkinter import *
 import socket
 import threading
 from tkinter import messagebox
-root = Tk()
+import time
+from customtkinter import *
+root = CTk()
+root.geometry("940x520")
 root.configure(bg="black")
 root.title("Ultimate TicTacToe")
 lbutt = ",".join([",".join([f"button{x}{y}" for y in range(1, 10)]) for x in range(1, 10)]).split(",")
 # link = input("Enter the join link: ")
 # port = int(input("Enter the port number: "))
+username = "Helo"
 c = socket.socket()
-c.connect(("localhost", 9999))
+def connect():
+    try:
+        c.connect(("localhost", 9999))
+        print("Connected")
+    except:
+        connect()
+print("Waiting for connections...")
+connect()
+
 
 def disable(x, y="#7ec7e6"):
     z = list(x)[-1]
@@ -25,6 +37,53 @@ def disable(x, y="#7ec7e6"):
                 exec(i + "[\"state\"] = DISABLED")
                 exec(i + "[\"bg\"] = \"#ffe6ff\"")
                 exec(i + "[\"activebackground\"] = \"#ffe6ff\"")
+def FrameWidth(event):
+    canvas_width = event.width
+    mycanvas.itemconfig(test,width = canvas_width)
+def OnFrameConfigure(event):
+    mycanvas.configure(scrollregion=mycanvas.bbox("all"))
+canvas1 = Canvas(root,bg="#212325",highlightbackground="black",width=420)
+f = CTkFrame(canvas1,highlightbackground="#212325",bg_color="#212325",fg_color="#212325")
+canvas1.grid(row=0,column=11,rowspan=11,sticky="ns")
+canvas1.create_window((15,10),window=f,anchor="nw")
+main_frame = CTkFrame(f,height=300,width=400,bg_color="#212325",fg_color="#212325")
+entry_frame = CTkFrame(f,height=100,width=400,fg_color="#212325") #fg_color="#212325"
+mycanvas = Canvas(main_frame,bg="#212325",highlightbackground="#212325")
+mycanvas.pack(side=LEFT,fill="both")
+yscrollbar = Scrollbar(main_frame,command=mycanvas.yview)
+yscrollbar.pack(side=RIGHT,fill="y")
+mycanvas.configure(yscrollcommand=yscrollbar.set)
+canvas_frame = CTkFrame(mycanvas,bg_color="#212325",fg_color="#212325")
+canvas_frame.bind("<Configure>", OnFrameConfigure)
+mycanvas.bind("<Configure>",FrameWidth)
+test = mycanvas.create_window((0,0),window=canvas_frame,anchor="nw")
+main_frame.pack(side=TOP,pady=20)
+random_label = CTkLabel(f,text="")
+random_label_again = CTkLabel(f,text="")
+entry_frame.pack(side=BOTTOM,pady=20)
+random_label.pack(side=BOTTOM)
+random_label_again.pack(side=BOTTOM)
+fake_entrybox = CTkEntry(entry_frame,width=295,height=95,state=DISABLED)
+entry_box = Text(entry_frame,width=35,height=5,bd=0,bg="#343638",fg="white",insertbackground="white")
+send_button = CTkButton(entry_frame,text="Send",width=12,command=lambda:send(True,entry_box.get(1.0,"end-1c")))
+send_button.pack(side=RIGHT)
+fake_entrybox.pack(side=RIGHT,padx=20)
+entry_box.place(x=25,y=5)
+def send(x,y):
+    if x:
+        entry_box.delete(1.0,"end-1c")
+        c.send(bytes("<p>"+y+"<p>",'utf-8'))
+        frame = CTkFrame(canvas_frame,corner_radius=10)
+        frame.pack(side=TOP,anchor="e",padx=20)
+        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=RIGHT)
+        mycanvas.yview_moveto(1)
+    else:
+        frame = CTkFrame(canvas_frame,corner_radius=10)
+        lol = mycanvas.yview()[1]
+        frame.pack(side=TOP,anchor="w",padx=20)
+        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=LEFT)
+        if lol == 1:
+            mycanvas.yview_moveto(1)
 
 def checkifdisabled(p,r,q = "#7ec7e6"):
     try:
@@ -74,31 +133,25 @@ def local_win(x,y):
 def global_win():
 
     print(l_wins)
-    winrow = False
-    wincol = False
-    windiag1 = False
-    windiag2 = False
     for i in range(1,10,3):
         if l_wins[i] == l_wins[i+1] == l_wins[i+2] != "":
-            winrow = True
-            break
+            return True
     for i in range(1,4):
         if l_wins[i] == l_wins[i+3] == l_wins[i+6] != "":
-            wincol = True
-            break
+            return True
     if l_wins[1] == l_wins[5] == l_wins[9] != "":
-        windiag1 = True
+        return True
     if l_wins[3] == l_wins[5] == l_wins[7] != "":
-        windiag2 = True
-    if winrow or wincol or windiag1 or windiag2:
-        c.send(bytes('lost', "utf-8"))
-    return winrow or wincol or windiag1 or windiag2
+        return True
 
 def listen():
-
+    loc = []
     global last_move
     while True:
-        msg = c.recv(2048).decode()
+        if len(loc) == 0:
+            loc.extend([x for x in c.recv(2048).decode().split('\0') if x != ''])
+        print(loc)
+        msg = loc.pop(0)
         print(msg)
         if msg == "X":
             last_move = "X"
@@ -126,10 +179,13 @@ def listen():
                             disabled.append(i)
                 l_wins[int(msg[-2])] = moves[moves.index(last_move)-1]
             checkifdisabled(msg[-1],True)
-        elif "lost" in msg:
+        elif msg == 'lost':
             disableall()
             messagebox.showinfo("GAME OVER","YOU LOST!!!")
             root.destroy()
+        else:
+            msg = msg[3:-3]
+            send(False,msg)
 
 def disableall():
     for i in lbutt:
@@ -156,7 +212,7 @@ moves = ["X","O"]
 
 def change(x):
     global last_move
-    c.send(bytes(x, "utf-8"))
+    c.send(bytes('\0'+x+'\0', "utf-8"))
     disable(x, "#e6b3ff")
     checkifdisabled(x[-1],False,"#e6b3ff")
     if last_move == "O":
@@ -165,14 +221,14 @@ def change(x):
         disabled.append(x)
         dic[x] = "X"
         last_move = "X"
-        c.send(bytes("X", "utf-8"))
+        c.send(bytes("\0X\0", "utf-8"))
     else:
         exec(x + "[\"text\"] = \"O\"")
         exec(x + "[\"state\"] = DISABLED")
         disabled.append(x)
         dic[x] = "O"
         last_move = "O"
-        c.send(bytes("O", "utf-8"))
+        c.send(bytes("\0O\0", "utf-8"))
     disableall()
     if local_win(x[-2],last_move):
         for i in lbutt:
@@ -183,8 +239,10 @@ def change(x):
                 if i not in disabled:
                     disabled.append(i)
         l_wins[int(x[-2])] = last_move
-        if global_win():
+        if global_win() is True:
             disableall()
+            c.send(bytes('\0LMFAO NOOB\0', "utf-8"))
+            c.send(bytes('\0lost\0', "utf-8"))
             messagebox.showinfo("GAME OVER","YOU WON")
             root.destroy()
 
