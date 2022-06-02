@@ -2,7 +2,6 @@ from tkinter import *
 import socket
 import threading
 from tkinter import messagebox
-import time
 from customtkinter import *
 root = CTk()
 root.geometry("940x520")
@@ -67,21 +66,26 @@ fake_entrybox = CTkEntry(entry_frame,width=295,height=95,state=DISABLED)
 entry_box = Text(entry_frame,width=35,height=5,bd=0,bg="#343638",fg="white",insertbackground="white")
 send_button = CTkButton(entry_frame,text="Send",width=12,command=lambda:send(True,entry_box.get(1.0,"end-1c")))
 send_button.pack(side=RIGHT)
+def enter_to_send(e):
+    send(True,entry_box.get(1.0,"end-1c"))
+    return "break"
+entry_box.bind("<Return>",enter_to_send)
+entry_box.bind("<Shift-Return>",lambda e: entry_box.insert(END,""))
 fake_entrybox.pack(side=RIGHT,padx=20)
 entry_box.place(x=25,y=5)
 def send(x,y):
-    if x:
+    if x and y != "":
         entry_box.delete(1.0,"end-1c")
         c.send(bytes("<p>"+y+"<p>",'utf-8'))
         frame = CTkFrame(canvas_frame,corner_radius=10)
-        frame.pack(side=TOP,anchor="e",padx=20)
-        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=RIGHT)
+        frame.pack(side=TOP,anchor="e",padx=20,pady=3)
+        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=RIGHT,pady=5)
         mycanvas.yview_moveto(1)
-    else:
+    elif y != "":
         frame = CTkFrame(canvas_frame,corner_radius=10)
         lol = mycanvas.yview()[1]
-        frame.pack(side=TOP,anchor="w",padx=20)
-        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=LEFT)
+        frame.pack(side=TOP,anchor="w",padx=20,pady=3)
+        CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=LEFT,pady=5)
         if lol == 1:
             mycanvas.yview_moveto(1)
 
