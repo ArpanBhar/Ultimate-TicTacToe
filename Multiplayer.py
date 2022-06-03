@@ -162,7 +162,7 @@ def listen():
             last_move = "X"
         elif msg == "O":
             last_move = "O"
-        elif "button" in msg:
+        elif "button" in msg and msg[0] != "<":
             disable(msg)
             if last_move == "O":
                 exec(msg + "[\"text\"] = \"X\"")
