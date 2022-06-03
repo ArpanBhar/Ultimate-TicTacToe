@@ -3,6 +3,7 @@ import socket
 import threading
 from tkinter import messagebox
 from customtkinter import *
+from time import *
 root = CTk()
 root.geometry("940x520")
 root.configure(bg="black")
@@ -76,19 +77,19 @@ entry_box.place(x=25,y=5)
 def send(x,y):
     if x and y != "":
         entry_box.delete(1.0,"end-1c")
-        c.send(bytes("'\0'<p>"+y+"<p>'\0'",'utf-8'))
-        frame = CTkFrame(canvas_frame,corner_radius=10)
+        c.send(bytes("\0<p>"+y+"<p>\0",'utf-8'))
+        frame = CTkFrame(canvas_frame,corner_radius=8)
         frame.pack(side=TOP,anchor="e",padx=20,pady=3)
         CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=RIGHT,pady=5)
+        mycanvas.update_idletasks()
         mycanvas.yview_moveto(1)
     elif y != "":
-        frame = CTkFrame(canvas_frame,corner_radius=10)
-        lol = mycanvas.yview()[1]
+        frame = CTkFrame(canvas_frame,corner_radius=8)
+        yview_coords = mycanvas.yview()[1]
         frame.pack(side=TOP,anchor="w",padx=20,pady=3)
         CTkLabel(frame,text=y,wraplength=300,corner_radius=8).pack(side=LEFT,pady=5)
-        if lol == 1:
+        if yview_coords == 1:
             mycanvas.yview_moveto(1)
-
 def checkifdisabled(p,r,q = "#7ec7e6"):
     try:
         if len(disabled) == 81:
@@ -153,7 +154,7 @@ def listen():
     global last_move
     while True:
         if len(loc) == 0:
-            loc.extend([x for x in c.recv(2048).decode().split('\0') if x != ''])
+            loc.extend([x for x in c.recv(2048).decode().split('\0') if x != '' or '\0'])
         print(loc)
         msg = loc.pop(0)
         print(msg)
@@ -245,13 +246,9 @@ def change(x):
         l_wins[int(x[-2])] = last_move
         if global_win() is True:
             disableall()
-            c.send(bytes('\0LMFAO NOOB\0', "utf-8"))
             c.send(bytes('\0lost\0', "utf-8"))
             messagebox.showinfo("GAME OVER","YOU WON")
             root.destroy()
-
-
-
 for i in range(1, 10):
     for j in range(1, 10):
         exec(f"button{i}{j} = Button(root,text=\" \",font=\"Helvatica 15 bold\",padx=18,pady=8,width = 1,bg=\"#ffe6ff\",bd=0,command=lambda :change(\"button{i}{j}\"),state = NORMAL)")
@@ -262,9 +259,6 @@ for i in range(0, 10, 4):
 for i in [(0, 3), (3, 0), (0, 7), (7, 0)]:
     exec(f"l{i[0] + i[1]} = Label(text=\"\",font = \'Helvatica 1\',bg=\"black\",)")
     eval(f"l{i[0] + i[1]}.grid(row=i[0],column=i[1],pady=0)")
-
-# canvas1 = Canvas(width=10,height=520,bg="red")
-# canvas1.grid(row=0,column=4,columnspan=11)
 root.mainloop()
 print(dic)
 print(l_wins)
