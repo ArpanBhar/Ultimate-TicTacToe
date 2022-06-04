@@ -5,7 +5,9 @@ from tkinter import messagebox
 from customtkinter import *
 from time import *
 root = CTk()
+set_appearance_mode("dark")
 root.geometry("940x520")
+root.resizable(False, False)
 root.configure(bg="black")
 root.title("Ultimate TicTacToe")
 lbutt = ",".join([",".join([f"button{x}{y}" for y in range(1, 10)]) for x in range(1, 10)]).split(",")
@@ -154,7 +156,7 @@ def listen():
     global last_move
     while True:
         if len(loc) == 0:
-            loc.extend([x for x in c.recv(2048).decode().split('\0') if x != '' or '\0'])
+            loc.extend(c.recv(2048).decode().split('\0'))
         print(loc)
         msg = loc.pop(0)
         print(msg)
