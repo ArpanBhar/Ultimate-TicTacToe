@@ -543,7 +543,6 @@ def binder(m):
         activate(m)
 
 
-
 #creating the button shapes
 compshape = mainscreen1.create_image(530,340,anchor='center',image=btn)
 multshape = mainscreen1.create_image(530,415,anchor='center',image=btn)
