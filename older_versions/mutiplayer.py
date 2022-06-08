@@ -453,7 +453,8 @@ def multiplayer():
             disableall()
             game_screen.delete('turns')
             print('global win: ', x)
-            exec(i + f"[\"bg\"] = \'#F7E1A1\'")
+            for i in lbutt:
+                exec(i + f"[\"bg\"] = \'#F7E1A1\'")
             hideboxes('pink', x[-1])
             messagebox.showinfo("GAME OVER", "YOU WON")
 
@@ -487,7 +488,8 @@ def multiplayer():
             disableall()
             game_screen.delete('turns')
             print('global win: ', x)
-            exec(i + f"[\"bg\"] = \'#F7E1A1\'")
+            for i in lbutt:
+                exec(i + f"[\"bg\"] = \'#F7E1A1\'")
             hideboxes('pink', x[-1])
             messagebox.showinfo("GAME OVER", "YOU WON")
 
