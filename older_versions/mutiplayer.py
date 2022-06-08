@@ -97,7 +97,6 @@ game_screen = Canvas(root, width=1060, height=640,highlightthickness=6,highlight
 game_screen.create_image(0,0,anchor='nw',image=gcbg)
 running = False
 
-
 def connect(HOST,PORT):
     global c
     c = socket.socket()
