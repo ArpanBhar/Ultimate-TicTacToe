@@ -1,5 +1,5 @@
 from tkinter import *
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageSequence
 from tkinter.font import Font
 import PIL.Image
 from tkinter import messagebox
@@ -7,10 +7,31 @@ from customtkinter import *
 import socket
 import threading
 import subprocess
+from os import chdir
+from urllib.request import urlopen
+chdir("assets")
+def give_link():
+    while True:
+        try:
+            url = urlopen("http://127.0.0.1:4040/api/tunnels").read().rstrip().decode().replace("false","False")
+            exec("global url_dict ; url_dict = " + url)
+            print(url_dict["tunnels"][0]["public_url"][6::])
+            break
+        except:
+            continue
+def start_ngrok(event):
+    subprocess.Popen("python server.py")
+    connect("localhost",9999)
+    subprocess.Popen("ngrok.exe tcp 9999",creationflags=subprocess.CREATE_NEW_CONSOLE)
+    th = threading.Thread(target=give_link)
+    th.start()
 
 root = CTk()
-root.geometry("1060x640")
+w = root.winfo_screenwidth() /2 - 530
+h = root.winfo_screenwidth() /2 - 640
+root.geometry(f"1060x640+{int(w)}+{int(h)}")
 root.configure(bg='black')
+
 root.set_appearance_mode('dark')
 
 #grid image
@@ -59,7 +80,7 @@ bigbtn = ImageTk.PhotoImage(bigbtn)
 
 #gamescreen bg
 gcbg = PIL.Image.open(r'gcbg.png')
-gcbg = gcbg.resize((1060,640), Image.Resampling.LANCZOS)
+gcbg = gcbg.resize((1070,650), Image.Resampling.LANCZOS)
 gcbg = ImageTk.PhotoImage(gcbg)
 #turns
 OUT = PIL.Image.open(r'OUT.png')
@@ -78,13 +99,21 @@ OOT_P = ImageTk.PhotoImage(OOT)
 #creating mainscreen
 mainscreen1 = Canvas(root,bg='black',width=1060,height=640,highlightthickness=0)
 mainscreen1.pack()
-mainscreen1.create_image(0,0,anchor='nw',image=mcbg)
+bob = mainscreen1.create_image(0,0,anchor='nw')
+def playgif():
+    global mcbg,mainscreen1
+    mcbg = PIL.Image.open(r'mcbg.gif')
+
+    for mcbg in ImageSequence.Iterator(mcbg):
+        mcbg = ImageTk.PhotoImage(mcbg)
+        mainscreen1.itemconfig(bob,image=mcbg)
+        root.update()
+playgif()
 
 #creating gamescreen
 game_screen = Canvas(root, width=1060, height=640,highlightthickness=6,highlightbackground='#080c11',relief='sunken')
 game_screen.create_image(0,0,anchor='nw',image=gcbg)
 running = False
-
 
 def connect(HOST,PORT):
     global c
@@ -98,7 +127,7 @@ def connect(HOST,PORT):
 
 def multiplayer():
     mainscreen3.pack_forget()
-    game_screen.pack()
+    game_screen.pack(expand=True)
     global count,game_panel,k,last_move,bigbluebox,bigpinkbox,running,rebind,disabled,increaser,size
 
     running = True
@@ -111,11 +140,11 @@ def multiplayer():
     game_screen.create_line(735, 18, 735, 492, fill="#210101", width=6)
     game_screen.create_window(500,255,anchor='center',window=game_panel)
 
-    def rematch_func():
-        print('offer sent')
-        c.send(bytes('rematch', "utf-8"))
-    rematch = Button(text='Rematch', height=5, width=10,command=rematch_func)
-    rematch_win = game_screen.create_window(600, 600, anchor='center', window=rematch)
+    # def rematch_func():
+    #     print('offer sent')
+    #     c.send(bytes('rematch', "utf-8"))
+    # rematch = Button(text='Rematch', height=5, width=10,command=rematch_func)
+    # rematch_win = game_screen.create_window(600, 600, anchor='center', window=rematch)
 
     #O's side
     O_UT = game_screen.create_image(130,250,anchor='center',image=OUT_P,state='hidden',tags='turns')
@@ -148,10 +177,7 @@ def multiplayer():
     #canvas1.create_window((5,5),window=f,anchor="nw")
     main_frame = CTkFrame(f_label, height=300, width=200, bg_color="#0c0c10", fg_color="#0c0c10")
     entry_frame = CTkFrame(f_label, height=100, width=280,fg_color='#0c0c10',bg_color='#0c0c10')
-
     mycanvas = Canvas(main_frame, bg="#0c0c10", highlightbackground="#0c0c10", width=250, height=375)
-
-    # canvas1.create_image(0,0,anchor='nw',image=gcbg)
 
     mycanvas.pack(side=LEFT, fill="both")
     yscrollbar = Scrollbar(main_frame, command=mycanvas.yview)
@@ -187,15 +213,15 @@ def multiplayer():
             entry_box.delete(1.0, "end-1c")
             c.send(bytes("\0<p>" + y + "<p>\0", 'utf-8'))
             frame = CTkFrame(canvas_frame, corner_radius=8)
-            frame.pack(side=TOP, anchor="e", padx=20, pady=3)
-            CTkLabel(frame, text=y, wraplength=300, corner_radius=8).pack(side=RIGHT, pady=5)
+            frame.pack(side=TOP, anchor="e", padx=5, pady=3)
+            CTkLabel(frame, text=y, wraplength=120, corner_radius=15).pack(side=RIGHT, pady=5)
             mycanvas.update_idletasks()
             mycanvas.yview_moveto(1)
         elif y != "":
             frame = CTkFrame(canvas_frame, corner_radius=8)
             yview_coords = mycanvas.yview()[1]
-            frame.pack(side=TOP, anchor="w", padx=20, pady=3)
-            CTkLabel(frame, text=y, wraplength=300, corner_radius=8).pack(side=LEFT, pady=5)
+            frame.pack(side=TOP, anchor="w", padx=5, pady=3)
+            CTkLabel(frame, text=y, wraplength=120, corner_radius=8).pack(side=LEFT, pady=5)
             if yview_coords == 1:
                 mycanvas.yview_moveto(1)
 
@@ -310,7 +336,7 @@ def multiplayer():
         if l_wins[3] == l_wins[5] == l_wins[7] != "":
             windiag2 = True
         if winrow or wincol or windiag1 or windiag2 is True:
-            c.send(bytes('lost', "utf-8"))
+            c.send(bytes('\0lost\0', "utf-8"))
         return winrow or wincol or windiag1 or windiag2
 
     def hideboxes(box, x):
@@ -366,10 +392,10 @@ def multiplayer():
                 hideboxes('blue', temp[-1])
                 game_screen.delete('turns')
                 messagebox.showinfo("GAME OVER", "YOU LOST!!! YOU DUMB BASTARD\nLLLLLLL")
-            elif 'rematch' in msg:
+            elif 'rematch' == msg:
                 accept = Button(text='Accept',height=5,width=10,command=accept_func)
                 game_screen.create_window(700,600,anchor='center',window=accept)
-            elif 'accepted' in msg:
+            elif 'accepted' == msg:
                 game_screen.delete('turns')
                 game_screen.pack_forget()
                 last_move = 'O'
@@ -444,7 +470,8 @@ def multiplayer():
             disableall()
             game_screen.delete('turns')
             print('global win: ', x)
-            exec(i + f"[\"bg\"] = \'#F7E1A1\'")
+            for i in lbutt:
+                exec(i + f"[\"bg\"] = \'#F7E1A1\'")
             hideboxes('pink', x[-1])
             messagebox.showinfo("GAME OVER", "YOU WON")
 
@@ -478,7 +505,8 @@ def multiplayer():
             disableall()
             game_screen.delete('turns')
             print('global win: ', x)
-            exec(i + f"[\"bg\"] = \'#F7E1A1\'")
+            for i in lbutt:
+                exec(i + f"[\"bg\"] = \'#F7E1A1\'")
             hideboxes('pink', x[-1])
             messagebox.showinfo("GAME OVER", "YOU WON")
 
@@ -562,6 +590,21 @@ def buttleave(win,shape,y,label,ly,no='1'):
     exec(f'mainscreen{no}.delete('+shape+')')
     exec(shape+f"= mainscreen{no}.create_image(530,"+y+",anchor='center',image=btn)",globals())
 
+def backenter(win, shape,  label, no):
+    exec(f"mainscreen{no}.delete(" + win + ")")
+    exec(win + f"= mainscreen{no}.create_window(220,503, anchor='center', window=" + label + ")", globals())
+    exec(label + ".configure(fg='#d7bd1e',font=('Ink Free',20,\"bold\"))")
+    exec(f'mainscreen{no}.delete(' + shape + ')')
+    exec(shape + f"= mainscreen{no}.create_image(220,520,anchor=\'center\',image=bigbtn2)", globals())
+
+def backleave(win, shape , label, no):
+    exec(win + f"= mainscreen{no}.create_window(220,505, anchor='center', window=" + label + ")")
+    exec(label + ".configure(fg='white',font=('Ink Free',17,\"bold\"))")
+    exec(f'mainscreen{no}.delete(' + shape + ')')
+    exec(shape + f"= mainscreen{no}.create_image(220,520 ,anchor='center',image=btn2)", globals())
+
+
+
 #the button texts
 f = Font(family = 'Ink Free',size=18,weight="bold")
 Computer = Label(text='Computer',font=f,bg='black',padx=0,pady=0,fg='white',width=7)
@@ -583,8 +626,12 @@ Settings.bind('<Leave>',lambda event: buttleave('sett','settshape','490','Settin
 Quit.bind('<Enter>',lambda event: buttenter('quit','quitshape','565','Quit','548'))
 Quit.bind('<Leave>',lambda event: buttleave('quit','quitshape','565','Quit','550'))
 
+def back_func(cno,bno):
+    exec(f"mainscreen{cno}.pack_forget()")
+    exec(f"mainscreen{bno}.pack()")
+
 def lcl_func(event=None):
-    global f, mainscreen3, host, join, hostshape, joinshape, host_win, join_win
+    global f, mainscreen3, host, join, hostshape, joinshape, host_win, join_win,back4,back_win4,backshape4
     mainscreen2.pack_forget()
     mainscreen3 = Canvas(root, bg='black', width=1060, height=640, highlightthickness=0)
     mainscreen3.pack()
@@ -595,13 +642,18 @@ def lcl_func(event=None):
     join_win = mainscreen3.create_window(530, 400, anchor='center', window=join)
     hostshape = mainscreen3.create_image(530, 340, anchor='center', image=btn)
     joinshape = mainscreen3.create_image(530, 415, anchor='center', image=btn)
-    host.bind('<Enter>', lambda event: buttenter('host_win', 'hostshape', '340', 'host', '323','3'))
+    host.bind('<Enter>', lambda event: buttenter('host_win', 'hostshape', '340', 'host', '322','3'))
     host.bind('<Leave>', lambda event: buttleave('host_win', 'hostshape', '340', 'host', '325','3'))
-    join.bind('<Enter>', lambda event: buttenter('join_win', 'joinshape', '415', 'join', '398', '3'))
+    join.bind('<Enter>', lambda event: buttenter('join_win', 'joinshape', '415', 'join', '397', '3'))
     join.bind('<Leave>', lambda event: buttleave('join_win', 'joinshape', '415', 'join', '400', '3'))
     host.bind("<Button-1>",gamescreen)
     join.bind('<Button-1>',lambda event: connect('localhost',9999))
-
+    back4 = Label(text='Back', font=f, bg='black', padx=0, pady=0, fg='white', width=7)
+    back_win4 = mainscreen3.create_window(220, 505, anchor='center', window=back4)
+    backshape4 = mainscreen3.create_image(220, 520, anchor='center', image=btn2)
+    back4.bind('<Enter>', lambda event: backenter('back_win4', 'backshape4', 'back4', '3'))
+    back4.bind('<Leave>', lambda event: backleave('back_win4', 'backshape4', 'back4', '3'))
+    back4.bind('<Button-1>', lambda event: back_func('3', '2'))
 entry = PIL.Image.open(r'entry.png')
 entry = entry.resize((900,470), Image.Resampling.LANCZOS)
 entry = ImageTk.PhotoImage(entry)
@@ -613,19 +665,45 @@ btn2 = ImageTk.PhotoImage(btn2)
 bigbtn2 = PIL.Image.open(r'bigbutt.png')
 bigbtn2 = bigbtn2.resize((270,240), Image.Resampling.LANCZOS) #330 240
 bigbtn2 = ImageTk.PhotoImage(bigbtn2)
-
-def glbl_func(event=None):
-    global join_win,joinshape,mainscreen3,join
-    f1 = Font(family = 'Child\'s Hand',size=18,weight="bold")
-    f2 = Font(family='Child\'s Hand', size=17,slant='italic')
-    f3 = Font(family='Child\'s Hand', size=27, weight='bold')
+def glbl_func(e):
+    global f, mainscreen3, host1, join1, hostshape1, joinshape1, host_win1, join_win1,back3,back_win3,backshape3
     mainscreen2.pack_forget()
     mainscreen3 = Canvas(root, bg='black', width=1060, height=640, highlightthickness=0)
     mainscreen3.pack()
     mainscreen3.create_image(0, 0, anchor='nw', image=mcbg)
+    host1 = Label(text='Host', font=f, bg='black', padx=0, pady=0, fg='white', width=9)
+    join1 = Label(text='Join', font=f, bg='black', padx=0, pady=0, fg='white', width=9)
+    host_win1 = mainscreen3.create_window(530, 325, anchor='center', window=host1)
+    join_win1= mainscreen3.create_window(530, 400, anchor='center', window=join1)
+    hostshape1 = mainscreen3.create_image(530, 340, anchor='center', image=btn)
+    joinshape1 = mainscreen3.create_image(530, 415, anchor='center', image=btn)
+    host1.bind('<Enter>', lambda event: buttenter('host_win1', 'hostshape1', '340', 'host1', '322','3'))
+    host1.bind('<Leave>', lambda event: buttleave('host_win1', 'hostshape1', '340', 'host1', '325','3'))
+    host1.bind("<Button-1>",start_ngrok)
+    join1.bind('<Enter>', lambda event: buttenter('join_win1', 'joinshape1', '415', 'join1', '397', '3'))
+    join1.bind('<Leave>', lambda event: buttleave('join_win1', 'joinshape1', '415', 'join1', '400', '3'))
 
-    mainscreen3.create_text(550, 240, fill="#FFD700", font=f3,anchor='center',text="Enter Ip Address:- ")
-    mainscreen3.create_line(380, 280,700,280 ,fill="#FFD700",width=4)
+    #host.bind("<Button-1>",gamescreen)
+
+    join1.bind('<Button-1>',join_func)
+    back3 = Label(text='Back', font=f, bg='black', padx=0, pady=0, fg='white', width=7)
+    back_win3 = mainscreen3.create_window(220, 505, anchor='center', window=back3)
+    backshape3 = mainscreen3.create_image(220, 520, anchor='center', image=btn2)
+    back3.bind('<Enter>', lambda event: backenter('back_win3', 'backshape3', 'back3', '3'))
+    back3.bind('<Leave>', lambda event: backleave('back_win3', 'backshape3', 'back3', '3'))
+    back3.bind('<Button-1>', lambda event: back_func('3', '2'))
+def join_func(event=None):
+    global join_win,joinshape,mainscreen4,join,back2,back_win2,backshape2
+    f1 = Font(family = 'Child\'s Hand',size=18,weight="bold")
+    f2 = Font(family='Child\'s Hand', size=17,slant='italic')
+    f3 = Font(family='Child\'s Hand', size=27, weight='bold')
+    mainscreen3.pack_forget()
+    mainscreen4 = Canvas(root, bg='black', width=1060, height=640, highlightthickness=0)
+    mainscreen4.pack()
+    mainscreen4.create_image(0, 0, anchor='nw', image=mcbg)
+
+    mainscreen4.create_text(550, 270, fill="#FFD700", font=f3,anchor='center',text="Enter Ip Address:- ")
+    mainscreen4.create_line(380, 300,700,300 ,fill="#FFD700",width=4)
 
     def onclick(e):
         if addr_entry.get() =='Eg: 8.tcp.ngrok : 12515':
@@ -636,21 +714,21 @@ def glbl_func(event=None):
             addr_entry.insert(0,'Eg: 8.tcp.ngrok : 12515')
             addr_entry.config(fg='grey',font=f2)
 
-    mainscreen3.create_image(602,430,anchor='center',image=entry)
+    lol = mainscreen4.create_image(602,430,anchor='center',image=entry)
     addr_entry = Entry(root,width=16,bd=0,bg='black',fg='grey',font=f2,insertbackground='white')
     addr_entry.insert(0,"Eg: 8.tcp.ngrok : 12515")
     addr_entry.bind("<FocusIn>",onclick)
     addr_entry.bind("<FocusOut>",offclick)
-    mainscreen3.create_window(493,348,anchor='center',window=addr_entry)
+    mainscreen4.create_window(493,348,anchor='center',window=addr_entry)
 
-    def joinenter(win, shape, y, label, ly, no='3'):
+    def joinenter(win, shape, y, label, ly, no='4'):
         exec(f"mainscreen{no}.delete(" + win + ")")
         exec(win + f"= mainscreen{no}.create_window(715," + ly + ", anchor='center', window=" + label + ")", globals())
         exec(label + ".configure(fg='#d7bd1e',font=('Ink Free',20,\"bold\"))")
         exec(f'mainscreen{no}.delete(' + shape + ')')
         exec(shape + f"= mainscreen{no}.create_image(715," + y + ",anchor=\'center\',image=bigbtn2)", globals())
 
-    def joinleave(win, shape, y, label, ly, no='3'):
+    def joinleave(win, shape, y, label, ly, no='4'):
         exec(win + f"= mainscreen{no}.create_window(715," + ly + ", anchor='center', window=" + label + ")")
         exec(label + ".configure(fg='white',font=('Ink Free',17,\"bold\"))")
         exec(f'mainscreen{no}.delete(' + shape + ')')
@@ -658,21 +736,28 @@ def glbl_func(event=None):
 
 
     join = Label(text='Join', font=f, bg='black', padx=0, pady=0, fg='white', width=7)
-    join_win = mainscreen3.create_window(715, 350, anchor='center', window=join)
-    joinshape = mainscreen3.create_image(715, 365, anchor='center', image=btn2)
+    join_win = mainscreen4.create_window(715, 350, anchor='center', window=join)
+    joinshape = mainscreen4.create_image(715, 365, anchor='center', image=btn2)
 
     join.bind('<Enter>', lambda event: joinenter('join_win', 'joinshape', '365', 'join', '348'))
     join.bind('<Leave>', lambda event: joinleave('join_win', 'joinshape', '365', 'join', '350'))
     join.bind('<Button-1>', lambda event: addrextract(addr_entry.get()))
     addr_entry.bind('<Return>',lambda event: addrextract(addr_entry.get()))
+    back2 = Label(text='Back', font=f, bg='black', padx=0, pady=0, fg='white', width=7)
+    back_win2 = mainscreen4.create_window(220, 505, anchor='center', window=back2)
+    backshape2 = mainscreen4.create_image(220, 520, anchor='center', image=btn2)
+    back2.bind('<Enter>', lambda event: backenter('back_win2', 'backshape2', 'back2', '4'))
+    back2.bind('<Leave>', lambda event: backleave('back_win2', 'backshape2', 'back2', '4'))
+    back2.bind('<Button-1>', lambda event: back_func('4', '3'))
+
     def addrextract(addr):
         if addr == "Eg: 8.tcp.ngrok : 12515" or "":
             print('invalid entry')
         else:
             nigga = addr.split(':')
-            gamescreen(str(nigga[0]),int(nigga[1]))
+            connect(str(nigga[0]),int(nigga[1]))
 def multbutt(event=None):
-    global f,mainscreen2,lcl,glbl,lclshape,glblshape,lcl_win,glbl_win
+    global f,mainscreen2,lcl,glbl,lclshape,glblshape,lcl_win,glbl_win,back1,backshape1,back_win1
     mainscreen1.pack_forget()
     mainscreen2 = Canvas(root, bg='black', width=1060, height=640, highlightthickness=0)
     mainscreen2.pack()
@@ -689,5 +774,16 @@ def multbutt(event=None):
     glbl.bind('<Leave>', lambda event: buttleave('glbl_win', 'glblshape', '415', 'glbl', '400', '2'))
     lcl.bind('<Button-1>', lcl_func)
     glbl.bind('<Button-1>',glbl_func)
+
+    back1 = Label(text='Back', font=f, bg='black', padx=0, pady=0, fg='white', width=7)
+    back_win1 = mainscreen2.create_window(220, 505, anchor='center', window=back1)
+    backshape1 = mainscreen2.create_image(220, 520, anchor='center', image=btn2)
+    back1.bind('<Enter>', lambda event: backenter('back_win1', 'backshape1', 'back1', '2'))
+    back1.bind('<Leave>', lambda event: backleave('back_win1', 'backshape1', 'back1', '2'))
+    back1.bind('<Button-1>',lambda event: back_func('2','1'))
+def destroy(e):
+    root.destroy()
 Multiplayer.bind('<Button-1>',multbutt)
+Quit.bind('<Button-1>',destroy)
+
 root.mainloop()
