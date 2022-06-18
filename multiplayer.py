@@ -122,13 +122,14 @@ def connect(HOST,PORT):
         c.connect((HOST, PORT))
         print("Connected")
         multiplayer()
-    except:
-        print('no such server dickhead')
+    except Exception as e:
+        print(e)
+
 
 def multiplayer():
     mainscreen3.pack_forget()
     game_screen.pack(expand=True)
-    global count,game_panel,k,last_move,bigbluebox,bigpinkbox,running,rebind,disabled,increaser,size
+    global count,game_panel,k,last_move,bigbluebox,bigpinkbox,running,change,disabled,increaser,size
 
     running = True
 
@@ -140,11 +141,11 @@ def multiplayer():
     game_screen.create_line(735, 18, 735, 492, fill="#210101", width=6)
     game_screen.create_window(500,255,anchor='center',window=game_panel)
 
-    # def rematch_func():
-    #     print('offer sent')
-    #     c.send(bytes('rematch', "utf-8"))
-    # rematch = Button(text='Rematch', height=5, width=10,command=rematch_func)
-    # rematch_win = game_screen.create_window(600, 600, anchor='center', window=rematch)
+    def rematch_func():
+        print('offer sent')
+        c.send(bytes('rematch', "utf-8"))
+    rematch = Button(text='Rematch', height=5, width=10,command=rematch_func)
+    rematch_win = game_screen.create_window(600, 600, anchor='center', window=rematch)
 
     #O's side
     O_UT = game_screen.create_image(130,250,anchor='center',image=OUT_P,state='hidden',tags='turns')
@@ -348,11 +349,9 @@ def multiplayer():
             exec(f'game_panel.itemconfig(pinksquare{x},state=\'hidden\')')
             exec(f'game_panel.itemconfig(bigpinkbox,state=\'hidden\')')
     def accept_func():
-        global last_move
         c.send(bytes('accepted', "utf-8"))
         game_screen.delete('turns')
         game_screen.pack_forget()
-        last_move ="O"
         multiplayer()
     def listen():
         loc = []
@@ -415,6 +414,7 @@ def multiplayer():
     disabled = []
     l_wins = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: ''}
     moves = ["X", "O"]
+    print(threading.active_count())
 
     def turnshower(move):
         if move == 'X':
@@ -440,40 +440,6 @@ def multiplayer():
             game_screen.itemconfig(X_UT, state='hidden')
             game_screen.itemconfig(O_UT, state='normal')
 
-
-    def rebind(x):
-        print('hello is run',x)
-        global last_move
-        c.send(bytes(x, "utf-8"))
-        disable(x, "pinksquare", '#f1aaf1')
-        hideboxes('blue', x[-2])
-        if last_move == "O":
-            exec(x+".configure(text=\"X\",fg=\"#ed151d\")")
-            exec(x + ".unbind(\'<Button-1>\')")
-            turnshower('X')
-            disabled.append(x)
-            dic[x] = "X"
-            last_move = "X"
-            c.send(bytes("X", "utf-8"))
-        else:
-            exec(x + ".configure(text=\"O\",fg=\"blue\")")
-            exec(x + ".unbind(\'<Button-1>\')")
-            turnshower('O')
-            disabled.append(x)
-            dic[x] = "O"
-            last_move = "O"
-            c.send(bytes("O", "utf-8"))
-        local_win(x[-2], last_move, last_move)
-        checkifdisabled(x[-1],'bigpinkbox', '#f1aaf1')
-        disableall()
-        if global_win():
-            disableall()
-            game_screen.delete('turns')
-            print('global win: ', x)
-            for i in lbutt:
-                exec(i + f"[\"bg\"] = \'#F7E1A1\'")
-            hideboxes('pink', x[-1])
-            messagebox.showinfo("GAME OVER", "YOU WON")
 
     # defining change
     def change(x):
@@ -511,12 +477,13 @@ def multiplayer():
             messagebox.showinfo("GAME OVER", "YOU WON")
 
     #making the buttons
+    global f1
     f1 = Font(family="Lithos Pro Light",size=20,weight='bold')
     for i in range(1, 10):
         for j in range(1, 10):
             exec(
                 f"button{i}{j} = Label(text=\"  \",font=f1,padx=5,pady=0,bg='#F7E1A1')"
-                f"\nbutton{i}{j}.bind(\'<Button-1>\',lambda event:change(\"button{i}{j}\"))",locals(),globals())
+                f"\nbutton{i}{j}.bind(\'<Button-1>\',lambda event:change(\"button{i}{j}\"))",globals())
 
     # screening buttons
     count = 1
@@ -565,7 +532,7 @@ def gamescreen(e):
 def binder(m):
     if running == True:
         def activate(i):
-            eval(i+f".bind(\'<Button-1>\',lambda event: rebind(\'button{i[-2]}{i[-1]}\'))")
+            exec(i+f".bind(\'<Button-1>\',lambda event: change(\'button{i[-2]}{i[-1]}\'))",globals())
             if i in disabled:
                 eval(i+f".unbind(\'<Button-1>\')")
         activate(m)
