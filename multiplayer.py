@@ -132,7 +132,6 @@ def multiplayer():
     global count,game_panel,k,last_move,bigbluebox,bigpinkbox,running,change,disabled,increaser,size
 
     running = True
-
     # making and gridding the canvas
     game_panel = Canvas(game_screen,bg="#F7E1A1", height=460, width=460,highlightthickness=0)
     game_screen.create_line(265,18,735,18,fill="#210101",width=6)
@@ -407,8 +406,9 @@ def multiplayer():
         for i in lbutt:
             exec(i + '.unbind(\'<Button-1>\')')
 
-    t = threading.Thread(target=listen)
-    t.start()
+    if threading.active_count() != 2:
+        t = threading.Thread(target=listen)
+        t.start()
     last_move = "O"
     dic = dict(map(lambda e: (e, " "), lbutt))
     disabled = []
