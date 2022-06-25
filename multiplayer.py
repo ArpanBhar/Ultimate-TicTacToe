@@ -231,7 +231,7 @@ def multiplayer():
     count = 1
     def shapes(x, y, shape):
         global count
-        exec(f"{shape}{count} = game_panel.create_image({x},{y},anchor=\"nw\",image={shape},state=\'hidden\')",
+        exec(f"{shape}{count} = game_panel.create_image({x},{y},anchor=\"nw\",image={shape},state=\'hidden\',tags=\'shapes\')",
              globals())
         count += 1
         if count - 1 == 9:
@@ -253,7 +253,6 @@ def multiplayer():
 
     # disable / enable buttons function
     def disable(x, y="bluesquare", c="#5fffb1"):
-        j = 0
         z = list(x)[-1]
         for i in lbutt:
             if "button" + z in i:
@@ -340,18 +339,16 @@ def multiplayer():
         return winrow or wincol or windiag1 or windiag2
 
     def hideboxes(box, x):
-
         if box == 'blue':
             exec(f'game_panel.itemconfig(bluesquare{x},state=\'hidden\')')
             exec(f'game_panel.itemconfig(bigbluebox,state=\'hidden\')')
         else:
             exec(f'game_panel.itemconfig(pinksquare{x},state=\'hidden\')')
             exec(f'game_panel.itemconfig(bigpinkbox,state=\'hidden\')')
+
     def accept_func():
         c.send(bytes('accepted', "utf-8"))
-        game_screen.delete('turns')
-        game_screen.pack_forget()
-        multiplayer()
+        reset("FUCK")
     def listen():
         loc = []
         global last_move
@@ -372,13 +369,13 @@ def multiplayer():
                 if last_move == "O":
                     exec(msg + ".configure(text=\"X\",fg=\"#ed151d\")")
                     exec(msg + ".unbind(\'<Button-1>\')")
-                    turnshower2('O')
+                    turnshower2("O")
                     disabled.append(msg)
                     dic[msg] = "X"
                 elif last_move == "X":
                     exec(msg + ".configure(text=\"O\",fg=\"blue\")")
                     exec(msg + ".unbind(\'<Button-1>\')")
-                    turnshower2('X')
+                    turnshower2("X")
                     disabled.append(msg)
                     dic[msg] = "O"
                 local_win(msg[-2], moves[moves.index(last_move) - 1], moves[moves.index(last_move) - 1])
@@ -394,22 +391,60 @@ def multiplayer():
                 accept = Button(text='Accept',height=5,width=10,command=accept_func)
                 game_screen.create_window(700,600,anchor='center',window=accept)
             elif 'accepted' == msg:
-                game_screen.delete('turns')
-                game_screen.pack_forget()
-                last_move = 'O'
-                multiplayer()
+                reset("FUCK")
             else:
                 msg = msg[3:-3]
                 send(False, msg)
+
+
+    def reset(move):
+        nonlocal dic,l_wins
+        global last_move,disabled,count,k
+        if move == 'FUCK':
+            game_screen.itemconfig(X_UT, state='hidden')
+            game_screen.itemconfig(O_UT, state='hidden')
+            game_screen.itemconfig(X_OT, state='hidden')
+            game_screen.itemconfig(O_OT, state='hidden')
+        for i in range(1,10):
+            exec(f"game_panel.itemconfig(pinksquare{i}, state='hidden')")
+            exec(f"game_panel.itemconfig(bluesquare{i}, state='hidden')")
+            exec(f"game_panel.itemconfig(X{i}, state='hidden')")
+            exec(f"game_panel.itemconfig(O{i}, state='hidden')")
+
+        for i in lbutt:
+            exec(i + "[\"bg\"] = \"#F7E1A1\"")
+
+        for i in range(1,100):
+            exec(f'game_panel.delete(\'win{i}\')')
+        count = 1
+        k = 1
+        f1 = Font(family="Lithos Pro Light", size=20, weight='bold')
+        for i in range(1, 10):
+            for j in range(1, 10):
+                exec(
+                    f"button{i}{j} = Label(text=\"  \",font=f1,padx=5,pady=0,bg='#F7E1A1')"
+                    f"\nbutton{i}{j}.bind(\'<Button-1>\',lambda event:change(\"button{i}{j}\"))", globals())
+        gridder()
+        last_move = "O"
+        dic = {}
+        dic = dict(map(lambda e: (e, " "), lbutt))
+        print('dic: ',dic)
+        disabled = []
+        l_wins = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: ''}
+        print(l_wins,'latest')
+
+        for i in lbutt:
+            binder(i)
+
 
     def disableall():
         for i in lbutt:
             exec(i + '.unbind(\'<Button-1>\')')
 
-    if threading.active_count() != 2:
-        t = threading.Thread(target=listen)
-        t.start()
+    t = threading.Thread(target=listen)
+    t.start()
     last_move = "O"
+    dic = {}
     dic = dict(map(lambda e: (e, " "), lbutt))
     disabled = []
     l_wins = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: ''}
@@ -419,31 +454,21 @@ def multiplayer():
     def turnshower(move):
         if move == 'X':
             game_screen.itemconfig(X_UT, state='hidden')
-            game_screen.itemconfig(O_UT, state='hidden')
-            game_screen.itemconfig(X_OT, state='hidden')
             game_screen.itemconfig(O_OT, state='normal')
         if move == "O":
-            game_screen.itemconfig(X_UT, state='hidden')
             game_screen.itemconfig(O_UT, state='hidden')
-            game_screen.itemconfig(O_OT, state='hidden')
             game_screen.itemconfig(X_OT, state='normal')
 
     def turnshower2(move):
         if move == 'X':
-            game_screen.itemconfig(O_UT, state='hidden')
-            game_screen.itemconfig(X_OT, state='hidden')
             game_screen.itemconfig(O_OT, state='hidden')
             game_screen.itemconfig(X_UT, state='normal')
         if move == 'O':
             game_screen.itemconfig(X_OT, state='hidden')
-            game_screen.itemconfig(O_OT, state='hidden')
-            game_screen.itemconfig(X_UT, state='hidden')
             game_screen.itemconfig(O_UT, state='normal')
-
 
     # defining change
     def change(x):
-        print('change is run',x)
         global last_move
         c.send(bytes(x, "utf-8"))
         disable(x, "pinksquare", '#f1aaf1')
@@ -478,6 +503,7 @@ def multiplayer():
 
     #making the buttons
     global f1
+
     f1 = Font(family="Lithos Pro Light",size=20,weight='bold')
     for i in range(1, 10):
         for j in range(1, 10):
@@ -496,35 +522,35 @@ def multiplayer():
         if count - 1 == 9:
             count = 1
             k += 1
-
-    for i in range(13, 100, 43):
-        for j in range(15, 100, 42):
-            make_grid(j, i)
-    for i in range(13, 100, 43):
-        for j in range(170, 255, 42):
-            make_grid(j, i)
-    for i in range(13, 100, 43):
-        for j in range(325, 429, 42):
-            make_grid(j, i)
-    for i in range(170, 257, 43):
-        for j in range(15, 100, 42):
-            make_grid(j, i)
-    for i in range(170, 257, 43):
-        for j in range(170, 255, 42):
-            make_grid(j, i)
-    for i in range(170, 257, 43):
-        for j in range(325, 429, 42):
-            make_grid(j, i)
-    for i in range(325, 414, 43):
-        for j in range(15, 100, 42):
-            make_grid(j, i)
-    for i in range(325, 414, 43):
-        for j in range(170, 255, 42):
-            make_grid(j, i)
-    for i in range(325, 414, 43):
-        for j in range(325, 429, 42):
-            make_grid(j, i)
-
+    def gridder():
+        for i in range(13, 100, 43):
+            for j in range(15, 100, 42):
+                make_grid(j, i)
+        for i in range(13, 100, 43):
+            for j in range(170, 255, 42):
+                make_grid(j, i)
+        for i in range(13, 100, 43):
+            for j in range(325, 429, 42):
+                make_grid(j, i)
+        for i in range(170, 257, 43):
+            for j in range(15, 100, 42):
+                make_grid(j, i)
+        for i in range(170, 257, 43):
+            for j in range(170, 255, 42):
+                make_grid(j, i)
+        for i in range(170, 257, 43):
+            for j in range(325, 429, 42):
+                make_grid(j, i)
+        for i in range(325, 414, 43):
+            for j in range(15, 100, 42):
+                make_grid(j, i)
+        for i in range(325, 414, 43):
+            for j in range(170, 255, 42):
+                make_grid(j, i)
+        for i in range(325, 414, 43):
+            for j in range(325, 429, 42):
+                make_grid(j, i)
+    gridder()
 def gamescreen(e):
     subprocess.Popen(r'python server.py')
     connect('localhost',9999)
