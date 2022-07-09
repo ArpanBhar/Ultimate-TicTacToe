@@ -66,18 +66,33 @@ bgb = ImageTk.PhotoImage(bgb)
 mcbg = PIL.Image.open(r'mcbg.jpg')
 mcbg = mcbg.resize((1060,640), Image.Resampling.LANCZOS)
 mcbg = ImageTk.PhotoImage(mcbg)
-#smol button
+#button
 btn = PIL.Image.open(r'button.png')
 btn = btn.resize((300,210), Image.Resampling.LANCZOS)
 btn = ImageTk.PhotoImage(btn)
-#new btn
-
+#rematchbuttons
+# accept = PIL.Image.open(r'accept.png')
+# accept = accept.resize((100,80), Image.Resampling.LANCZOS)
+# accept = ImageTk.PhotoImage(accept)
+# 
+# deny = PIL.Image.open(r'deny.png')
+# deny = ImageTk.PhotoImage(deny)
+#entry
+entry = PIL.Image.open(r'entry.png')
+entry = entry.resize((900,470), Image.Resampling.LANCZOS)
+entry = ImageTk.PhotoImage(entry)
+#btn2
+btn2 = PIL.Image.open(r'button.png')
+btn2 = btn2.resize((250,210), Image.Resampling.LANCZOS)
+btn2 = ImageTk.PhotoImage(btn2)
+#bbtn2
+bigbtn2 = PIL.Image.open(r'bigbutt.png')
+bigbtn2 = bigbtn2.resize((270,240), Image.Resampling.LANCZOS) #330 240
+bigbtn2 = ImageTk.PhotoImage(bigbtn2)
 #big button
 bigbtn = PIL.Image.open(r'bigbutt.png')
 bigbtn = bigbtn.resize((330,240), Image.Resampling.LANCZOS)
 bigbtn = ImageTk.PhotoImage(bigbtn)
-#entrybox
-
 #gamescreen bg
 gcbg = PIL.Image.open(r'gcbg.png')
 gcbg = gcbg.resize((1070,650), Image.Resampling.LANCZOS)
@@ -140,11 +155,33 @@ def multiplayer():
     game_screen.create_line(735, 18, 735, 492, fill="#210101", width=6)
     game_screen.create_window(500,255,anchor='center',window=game_panel)
 
-    def rematch_func():
-        print('offer sent')
-        c.send(bytes('rematch', "utf-8"))
-    rematch = Button(text='Rematch', height=5, width=10,command=rematch_func)
-    rematch_win = game_screen.create_window(600, 600, anchor='center', window=rematch)
+
+
+    # acpt_lbl = Label(text='',image=accept,borderwidth=0)
+    # game_screen.create_window(200,200,anchor='center',window=acpt_lbl)
+
+    def rematch_create():
+        def buttenter(event=None):
+            rematch.configure(bg='#1c1c1c')
+        def buttleave(event=None):
+            rematch.configure(bg='black')
+        def rematch_func(event=None):
+            print('offer sent')
+            c.send(bytes('rematch', "utf-8"))
+            rematch.configure(text='Offer Sent',fg='#C0C0C0',bg='#0f0f0f')
+            rematch.unbind('<Enter>')
+            rematch.unbind('<Leave>')
+            rematch.unbind('<Button-1>')
+
+        f = Font(family='Ink Free', size=19, weight="bold")
+        rematch = Label(text='Rematch', font=f,bg='black',fg='yellow',width=17,pady=5)
+        rematch.bind('<Enter>', buttenter)
+        rematch.bind('<Leave>', buttleave)
+        rematch.bind('<Button-1>', rematch_func)
+
+        game_screen.create_window(885, 515, anchor='center', window=rematch)
+
+    rematch_create()
 
     #O's side
     O_UT = game_screen.create_image(130,250,anchor='center',image=OUT_P,state='hidden',tags='turns')
@@ -168,16 +205,17 @@ def multiplayer():
 
     # canvas1 = Canvas(root,bg="#212325",highlightbackground="white",width=300,height=470)
     # canvas1_win = game_screen.create_window(750,20,anchor='nw',window=canvas1)
-    f = CTkFrame(root, highlightbackground="#171717",width=300,height=480)
+    f = CTkFrame(root,width=270,height=390)
     f.pack_propagate(0)# fg_color="green")
-    f_win = game_screen.create_window(750,17, anchor='nw', window=f)
-    f_label = Label(f,image=gcbg)
-    f_label.pack()
+    game_screen.create_window(750,25, anchor='nw', window=f)
+
+    f2 = CTkFrame(root, width=300, height=30)
+    game_screen.create_window(750, 435, anchor='nw', window=f2)
     # canvas1.grid(row=0,column=11,rowspan=11,sticky="ns")
     #canvas1.create_window((5,5),window=f,anchor="nw")
-    main_frame = CTkFrame(f_label, height=300, width=200, bg_color="#0c0c10", fg_color="#0c0c10")
-    entry_frame = CTkFrame(f_label, height=100, width=280,fg_color='#0c0c10',bg_color='#0c0c10')
-    mycanvas = Canvas(main_frame, bg="#0c0c10", highlightbackground="#0c0c10", width=250, height=375)
+    main_frame = CTkFrame(f, height=300, width=200, bg_color="#0c0c10", fg_color="#0c0c10")
+    entry_frame = CTkFrame(f2, height=100, width=280,fg_color='#0c0c10',bg_color='#0c0c10')
+    mycanvas = Canvas(main_frame, bg="#0c0c10", highlightbackground="#0c0c10", width=250, height=390)
 
     mycanvas.pack(side=LEFT, fill="both")
     yscrollbar = Scrollbar(main_frame, command=mycanvas.yview)
@@ -187,17 +225,17 @@ def multiplayer():
     canvas_frame.bind("<Configure>", OnFrameConfigure)
     mycanvas.bind("<Configure>", FrameWidth)
     test = mycanvas.create_window((0, 0), window=canvas_frame, anchor="nw")
-    main_frame.pack(side=TOP, pady=10)
-    random_label = CTkLabel(f_label, text="")
-    random_label_again = CTkLabel(f_label, text="")
-    entry_frame.pack(side=BOTTOM, pady=17)
-    random_label.pack(side=BOTTOM)
-    random_label_again.pack(side=BOTTOM)
-    fake_entrybox = CTkEntry(entry_frame, width=237, height=45, state=DISABLED)
-    entry_box = Text(entry_frame, width=28, height=2, bd=0, bg="#28241c", fg="white", insertbackground="white")
-    send_button = CTkButton(entry_frame, text="Send", width=12,
-                            command=lambda: send(True, entry_box.get(1.0, "end-1c")))
-    send_button.pack(side=RIGHT)
+    main_frame.pack(side=TOP)
+    #random_label = CTkLabel(f_label, text="")
+    #random_label_again = CTkLabel(f_label, text="")
+    entry_frame.pack(side=BOTTOM)
+    #random_label.pack(side=BOTTOM)
+    #random_label_again.pack(side=BOTTOM)
+    fake_entrybox = CTkLabel(entry_frame,width=260,height=37,bg_color='#595959', state=DISABLED)
+    entry_box = Text(entry_frame, width=32,height=2,bd=0,bg="#1a1712", fg="white", insertbackground="white")#28241c
+    #send_button = CTkButton(entry_frame, text="Send", width=12,
+    #command=lambda: send(True, entry_box.get(1.0, "end-1c")))
+    #send_button.pack(side=RIGHT)
 
     def enter_to_send(e):
         send(True, entry_box.get(1.0, "end-1c"))
@@ -205,8 +243,8 @@ def multiplayer():
 
     entry_box.bind("<Return>", enter_to_send)
     entry_box.bind("<Shift-Return>", lambda e: entry_box.insert(END, ""))
-    fake_entrybox.pack(side=RIGHT, padx=5)
-    entry_box.place(x=10, y=5)
+    fake_entrybox.pack()
+    entry_box.place(x=1, y=1)
 
     def send(x, y):
         if x and y != "":
@@ -398,8 +436,7 @@ def multiplayer():
 
 
     def reset(move):
-        nonlocal dic,l_wins
-        global last_move,disabled,count,k
+        global last_move,dic,disabled,l_wins,count,k
         if move == 'FUCK':
             game_screen.itemconfig(X_UT, state='hidden')
             game_screen.itemconfig(O_UT, state='hidden')
@@ -430,6 +467,7 @@ def multiplayer():
         dic = dict(map(lambda e: (e, " "), lbutt))
         print('dic: ',dic)
         disabled = []
+        l_wins = {}
         l_wins = {1: '', 2: '', 3: '', 4: '', 5: '', 6: '', 7: '', 8: '', 9: ''}
         print(l_wins,'latest')
 
@@ -441,8 +479,9 @@ def multiplayer():
         for i in lbutt:
             exec(i + '.unbind(\'<Button-1>\')')
 
-    t = threading.Thread(target=listen)
-    t.start()
+    if threading.active_count() != 2:
+        t = threading.Thread(target=listen)
+        t.start()
     last_move = "O"
     dic = {}
     dic = dict(map(lambda e: (e, " "), lbutt))
@@ -647,17 +686,7 @@ def lcl_func(event=None):
     back4.bind('<Enter>', lambda event: backenter('back_win4', 'backshape4', 'back4', '3'))
     back4.bind('<Leave>', lambda event: backleave('back_win4', 'backshape4', 'back4', '3'))
     back4.bind('<Button-1>', lambda event: back_func('3', '2'))
-entry = PIL.Image.open(r'entry.png')
-entry = entry.resize((900,470), Image.Resampling.LANCZOS)
-entry = ImageTk.PhotoImage(entry)
 
-btn2 = PIL.Image.open(r'button.png')
-btn2 = btn2.resize((250,210), Image.Resampling.LANCZOS)
-btn2 = ImageTk.PhotoImage(btn2)
-
-bigbtn2 = PIL.Image.open(r'bigbutt.png')
-bigbtn2 = bigbtn2.resize((270,240), Image.Resampling.LANCZOS) #330 240
-bigbtn2 = ImageTk.PhotoImage(bigbtn2)
 def glbl_func(e):
     global f, mainscreen3, host1, join1, hostshape1, joinshape1, host_win1, join_win1,back3,back_win3,backshape3
     mainscreen2.pack_forget()
