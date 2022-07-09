@@ -1,4 +1,5 @@
 from tkinter import *
+from tkinter import ttk
 from PIL import ImageTk, Image, ImageSequence
 from tkinter.font import Font
 import PIL.Image
@@ -71,12 +72,13 @@ btn = PIL.Image.open(r'button.png')
 btn = btn.resize((300,210), Image.Resampling.LANCZOS)
 btn = ImageTk.PhotoImage(btn)
 #rematchbuttons
-# accept = PIL.Image.open(r'accept.png')
-# accept = accept.resize((100,80), Image.Resampling.LANCZOS)
-# accept = ImageTk.PhotoImage(accept)
-# 
-# deny = PIL.Image.open(r'deny.png')
-# deny = ImageTk.PhotoImage(deny)
+accept = PIL.Image.open(r'accept.png')
+accept = accept.resize((65,63), Image.Resampling.LANCZOS)
+accept = ImageTk.PhotoImage(accept)
+
+deny = PIL.Image.open(r'deny.png')
+deny = deny.resize((57,55), Image.Resampling.LANCZOS)
+deny = ImageTk.PhotoImage(deny)
 #entry
 entry = PIL.Image.open(r'entry.png')
 entry = entry.resize((900,470), Image.Resampling.LANCZOS)
@@ -155,16 +157,12 @@ def multiplayer():
     game_screen.create_line(735, 18, 735, 492, fill="#210101", width=6)
     game_screen.create_window(500,255,anchor='center',window=game_panel)
 
-
-
-    # acpt_lbl = Label(text='',image=accept,borderwidth=0)
-    # game_screen.create_window(200,200,anchor='center',window=acpt_lbl)
-
     def rematch_create():
-        def buttenter(event=None):
-            rematch.configure(bg='#1c1c1c')
-        def buttleave(event=None):
-            rematch.configure(bg='black')
+        global rematch
+        def buttenter(e):
+            exec(e+f".configure(bg='#1c1c1c')")
+        def buttleave(e):
+            exec(e+f".configure(bg='black')")
         def rematch_func(event=None):
             print('offer sent')
             c.send(bytes('rematch', "utf-8"))
@@ -175,11 +173,11 @@ def multiplayer():
 
         f = Font(family='Ink Free', size=19, weight="bold")
         rematch = Label(text='Rematch', font=f,bg='black',fg='yellow',width=17,pady=5)
-        rematch.bind('<Enter>', buttenter)
-        rematch.bind('<Leave>', buttleave)
+        rematch.bind('<Enter>', lambda e: buttenter('rematch'))
+        rematch.bind('<Leave>', lambda e: buttleave('rematch'))
         rematch.bind('<Button-1>', rematch_func)
 
-        game_screen.create_window(885, 515, anchor='center', window=rematch)
+        game_screen.create_window(885, 515, anchor='center', window=rematch,tags='rematch')
 
     rematch_create()
 
@@ -203,39 +201,37 @@ def multiplayer():
     def OnFrameConfigure(event):
         mycanvas.configure(scrollregion=mycanvas.bbox("all"))
 
-    # canvas1 = Canvas(root,bg="#212325",highlightbackground="white",width=300,height=470)
-    # canvas1_win = game_screen.create_window(750,20,anchor='nw',window=canvas1)
     f = CTkFrame(root,width=270,height=390)
-    f.pack_propagate(0)# fg_color="green")
+    f.pack_propagate(0)
     game_screen.create_window(750,25, anchor='nw', window=f)
 
     f2 = CTkFrame(root, width=300, height=30)
     game_screen.create_window(750, 435, anchor='nw', window=f2)
-    # canvas1.grid(row=0,column=11,rowspan=11,sticky="ns")
-    #canvas1.create_window((5,5),window=f,anchor="nw")
+
     main_frame = CTkFrame(f, height=300, width=200, bg_color="#0c0c10", fg_color="#0c0c10")
     entry_frame = CTkFrame(f2, height=100, width=280,fg_color='#0c0c10',bg_color='#0c0c10')
     mycanvas = Canvas(main_frame, bg="#0c0c10", highlightbackground="#0c0c10", width=250, height=390)
-
     mycanvas.pack(side=LEFT, fill="both")
-    yscrollbar = Scrollbar(main_frame, command=mycanvas.yview)
+
+    # style = ttk.Style()
+    # style.configure("Horizontal.TScrollbar", gripcount=0,
+    #                 background="Green", darkcolor="DarkGreen", lightcolor="LightGreen",
+    #                 troughcolor="gray", bordercolor="blue", arrowcolor="white")
+
+    yscrollbar = Scrollbar(main_frame,orient='vertical',command=mycanvas.yview,bg='red',highlightbackground='red',highlightcolor='red',
+                           troughcolor='yellow')
     yscrollbar.pack(side=RIGHT, fill="y")
+
     mycanvas.configure(yscrollcommand=yscrollbar.set)
     canvas_frame = CTkFrame(mycanvas, bg_color="#0c0c10", fg_color="#0c0c10")
     canvas_frame.bind("<Configure>", OnFrameConfigure)
     mycanvas.bind("<Configure>", FrameWidth)
     test = mycanvas.create_window((0, 0), window=canvas_frame, anchor="nw")
     main_frame.pack(side=TOP)
-    #random_label = CTkLabel(f_label, text="")
-    #random_label_again = CTkLabel(f_label, text="")
     entry_frame.pack(side=BOTTOM)
-    #random_label.pack(side=BOTTOM)
-    #random_label_again.pack(side=BOTTOM)
+
     fake_entrybox = CTkLabel(entry_frame,width=260,height=37,bg_color='#595959', state=DISABLED)
     entry_box = Text(entry_frame, width=32,height=2,bd=0,bg="#1a1712", fg="white", insertbackground="white")#28241c
-    #send_button = CTkButton(entry_frame, text="Send", width=12,
-    #command=lambda: send(True, entry_box.get(1.0, "end-1c")))
-    #send_button.pack(side=RIGHT)
 
     def enter_to_send(e):
         send(True, entry_box.get(1.0, "end-1c"))
@@ -384,12 +380,18 @@ def multiplayer():
             exec(f'game_panel.itemconfig(pinksquare{x},state=\'hidden\')')
             exec(f'game_panel.itemconfig(bigpinkbox,state=\'hidden\')')
 
-    def accept_func():
+    def accept_func(e):
         c.send(bytes('accepted', "utf-8"))
         reset("FUCK")
+
+    def deny_func(e):
+        c.send(bytes('denied', "utf-8"))
+        game_screen.delete('rmch')
+        rematch_create()
+
     def listen():
         loc = []
-        global last_move
+        global last_move,rematch,albl,dlbl
         while True:
             if len(loc) == 0:
                 loc.extend(x for x in c.recv(2048).decode().split('\0'))
@@ -426,10 +428,33 @@ def multiplayer():
                 game_screen.delete('turns')
                 messagebox.showinfo("GAME OVER", "YOU LOST!!! YOU DUMB BASTARD\nLLLLLLL")
             elif 'rematch' == msg:
-                accept = Button(text='Accept',height=5,width=10,command=accept_func)
-                game_screen.create_window(700,600,anchor='center',window=accept)
+                game_screen.delete('rematch')
+                f = Font(family='Ink Free', size=17, weight="bold")
+                albl = Label(bg='black', image=accept, borderwidth=0)
+                dlbl = Label(bg='black', image=deny, borderwidth=0)
+                rmch = Label(text='Rematch\nOffer', font=f, bg='black', fg='yellow', width=12)
+
+                game_screen.create_window(767, 524, anchor='center', window=albl, tags='rmch')
+                game_screen.create_window(1002, 524, anchor='center', window=dlbl, tags='rmch')
+                game_screen.create_window(885, 525, anchor='center', window=rmch, tags='rmch')
+                def buttenter(label):
+                    exec(label + ".configure(bg='#1c1c1c')")
+                def buttleave(label):
+                    exec(label + ".configure(bg='black')")
+                albl.bind('<Button-1>',accept_func)
+                dlbl.bind('<Button-1>',deny_func)
+                albl.bind('<Enter>', lambda e: buttenter('albl'))
+                albl.bind('<Leave>', lambda e: buttleave('albl'))
+                dlbl.bind('<Enter>', lambda e: buttenter('dlbl'))
+                dlbl.bind('<Leave>', lambda e: buttleave('dlbl'))
+
+
+
             elif 'accepted' == msg:
                 reset("FUCK")
+            elif 'denied' == msg:
+                game_screen.delete('rematch')
+                rematch_create()
             else:
                 msg = msg[3:-3]
                 send(False, msg)
@@ -437,11 +462,13 @@ def multiplayer():
 
     def reset(move):
         global last_move,dic,disabled,l_wins,count,k
+        game_screen.delete('rmch')
         if move == 'FUCK':
             game_screen.itemconfig(X_UT, state='hidden')
             game_screen.itemconfig(O_UT, state='hidden')
             game_screen.itemconfig(X_OT, state='hidden')
             game_screen.itemconfig(O_OT, state='hidden')
+
         for i in range(1,10):
             exec(f"game_panel.itemconfig(pinksquare{i}, state='hidden')")
             exec(f"game_panel.itemconfig(bluesquare{i}, state='hidden')")
@@ -473,7 +500,7 @@ def multiplayer():
 
         for i in lbutt:
             binder(i)
-
+        rematch_create()
 
     def disableall():
         for i in lbutt:
