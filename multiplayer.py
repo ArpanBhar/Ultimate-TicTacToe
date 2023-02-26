@@ -139,6 +139,7 @@ def connect(HOST,PORT):
         c.connect((HOST, PORT))
         print("Connected")
         multiplayer()
+        
     except Exception as e:
         print(e)
 
@@ -805,6 +806,7 @@ def join_func(event=None):
         else:
             nigga = addr.split(':')
             connect(str(nigga[0]),int(nigga[1]))
+            back_func(4,3)
 def multbutt(event=None):
     global f,mainscreen2,lcl,glbl,lclshape,glblshape,lcl_win,glbl_win,back1,backshape1,back_win1
     mainscreen1.pack_forget()
