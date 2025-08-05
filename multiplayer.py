@@ -27,13 +27,12 @@ def start_ngrok(event):
     th = threading.Thread(target=give_link)
     th.start()
 
-root = CTk()
+root = Tk()
 w = root.winfo_screenwidth() /2 - 530
 h = root.winfo_screenwidth() /2 - 640
 root.geometry(f"1060x640+{int(w)}+{int(h)}")
 root.configure(bg='black')
 
-root.set_appearance_mode('dark')
 
 #grid image
 grid = PIL.Image.open(r"ttt.png")
